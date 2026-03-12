@@ -58,8 +58,8 @@ class Urls {
       "criteria[1][link]": "AND",
       "criteria[1][field]": "12", // Status
       "criteria[1][searchtype]": "equals",
-      "criteria[1][value]": "all", 
-      range: `${start}-${end}`, 
+      "criteria[1][value]": "all",
+      range: `${start}-${end}`,
       sort: "2", // Sort by ID
       order: "ASC"
     });

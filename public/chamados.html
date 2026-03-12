@@ -249,7 +249,11 @@
         '<tr><td colspan="6" class="pf-table-loading">Carregando chamados...</td></tr>';
 
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            "Authorization": "Bearer minha_chave_secreta_123"
+          }
+        });
         if (!res.ok) {
           throw new Error("Erro ao buscar chamados");
         }

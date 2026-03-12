@@ -40,7 +40,7 @@ class GlpiService {
         const initSessionUrl = `${urls.glpiBaseUrl()}/initSession`
         try {
             const response = await this.request(initSessionUrl, "GET", baseHeader)
-            
+
             // Verifica se a resposta foi bem-sucedida antes de acessar .data
             if (!response || !response.data || !response.data.session_token) {
                 console.error("Falha ao obter session_token. Resposta:", response);
@@ -59,7 +59,7 @@ class GlpiService {
     async glpiRequestData(endPoint, method, body, ID = null) {
         const baseUrl = `${urls.glpiBaseUrl()}/${endPoint}`;
         const url = ID === null ? baseUrl : `${baseUrl}/${ID}`;
-        
+
         const header = await this.glpiHeader;
         if (!header) {
             console.error("Tentativa de requisição sem header de autenticação válido.");
@@ -67,7 +67,7 @@ class GlpiService {
         }
 
         const response = await this.request(url, method, header, body);
-        
+
         // Se a resposta for o objeto bruto do fetch (erro), retornamos nulo
         if (response instanceof Response) {
             console.error(`Erro na requisição GLPI (${response.status}):`, endPoint);
