@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfill GLPI - Chamados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body class="pf-body">
+  <header class="pf-header">
+    <div class="pf-header-left">
+      <div class="pf-logo">Perfill</div>
+      <span class="pf-header-title">Monitor de Chamados</span>
+    </div>
+    <nav class="pf-nav">
+      <a href="/index.html" class="pf-nav-link">Guia</a>
+      <a href="/chamados.html" class="pf-nav-link pf-nav-link--active">Chamados</a>
+    </nav>
+  </header>
+
+  <main class="pf-main">
+    <section class="pf-filters-card pf-card">
+      <div class="pf-filters-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">Lista de Chamados</h1>
+        <button id="toggleFiltersBtn" class="pf-button" style="background: rgba(25, 197, 255, 0.15); color: var(--pf-primary); box-shadow: none; border: 1px solid rgba(25, 197, 255, 0.4); padding: 0.35rem 0.75rem; font-size: 0.8rem;">Mostrar Filtros</button>
+      </div>
+
+      <div id="filtersContainer" style="display: none;">
+        <div class="pf-filters-grid">
+          <div class="pf-field">
+            <label for="startDate">Data inicial</label>
+            <input id="startDate" type="date" />
+          </div>
+          <div class="pf-field">
+            <label for="endDate">Data final</label>
+            <input id="endDate" type="date" />
+          </div>
+          <div class="pf-field">
+            <label for="filterId">ID Chamado</label>
+            <input id="filterId" type="text" placeholder="Ex: 12345" autocomplete="off" />
+          </div>
+          <div class="pf-field">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus">
+              <option value="">Todos</option>
+              <option value="novo">Novo</option>
+              <option value="atribuido">Atribuído</option>
+              <option value="planejado">Planejado</option>
+              <option value="pendente">Pendente</option>
+              <option value="solucionado">Solucionado</option>
+              <option value="fechado">Fechado</option>
+              <option value="atrasado">Atrasado</option>
+            </select>
+          </div>
+          <div class="pf-field">
+            <label for="filterTecnico">Técnico</label>
+            <input id="filterTecnico" type="text" placeholder="Nome do técnico" autocomplete="off" />
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 1rem; gap: 0.5rem;">
+          <button id="clearFiltersBtn" class="pf-button" style="background: rgba(255, 77, 79, 0.15); color: var(--pf-accent-red); box-shadow: none; border: 1px solid rgba(255, 77, 79, 0.4);">Limpar</button>
+          <button id="loadTickets" class="pf-button">Buscar Chamados</button>
+        </div>
+        <p class="pf-hint">
+          A busca por período carrega novos dados da API. Filtros adicionais funcionam sobre os dados já carregados.
+        </p>
+      </div>
+    </section>
+
+    <section class="pf-card pf-card--table">
+      <div class="pf-table-header-bar">
+        <span>Chamados GLPI</span>
+        <span id="ticketsCount" class="pf-badge pf-badge--info">0 registros</span>
+      </div>
+      <div class="pf-table-wrapper">
+        <table class="pf-table">
+          <thead>
+            <tr>
+              <th class="pf-table-center">ID do Chamado</th>
+              <th>Título</th>
+              <th>Descrição</th>
+              <th class="pf-table-center">SLA</th>
+              <th class="pf-table-center">Tempo de Solução</th>
+              <th class="pf-table-center">Status Chamado</th>
+              <th class="pf-table-center">Técnico</th>
+            </tr>
+          </thead>
+          <tbody id="ticketsBody">
+            <tr>
+              <td colspan="7" class="pf-table-empty">
+                Nenhum chamado carregado. Informe o período e clique em
+                <strong>Carregar chamados</strong>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const button = document.getElementById("loadTickets");
+    const clearBtn = document.getElementById("clearFiltersBtn");
+    const toggleFiltersBtn = document.getElementById("toggleFiltersBtn");
+    const filtersContainer = document.getElementById("filtersContainer");
+    
+    const filterIdInput = document.getElementById("filterId");
+    const filterStatusSelect = document.getElementById("filterStatus");
+    const filterTecnicoInput = document.getElementById("filterTecnico");
+
+    const body = document.getElementById("ticketsBody");
+    const countLabel = document.getElementById("ticketsCount");
+
+    let allTicketsData = [];
+
+    function createStatusBadge(status, isAtrasado = false) {
+      const span = document.createElement("span");
+      span.classList.add("pf-badge");
+
+      if (!status) {
+        span.textContent = "Indefinido";
+        return span;
+      }
+
+      const normalized = String(status).toLowerCase();
+
+      // PRIORIDADE 1: Se estiver atrasado, usa estilo de perigo/vermelho
+      if (isAtrasado || normalized.includes("venc") || normalized.includes("fora") || normalized.includes("atrasado")) {
+        span.classList.add("pf-badge--danger");   
+      }
+      // PRIORIDADE 2: Sucesso para Novo/Solucionado/No Prazo
+      else if (normalized.includes("novo") || normalized.includes("solucionado") || normalized.includes("prazo")) {
+        span.classList.add("pf-badge--success");
+      }
+      // PRIORIDADE 3: Alerta para Pendente/Atenção
+      else if (normalized.includes("pendente") || normalized.includes("aten")) {
+        span.classList.add("pf-badge--warning"); 
+      }
+      // PADRÃO: Info para o resto
+      else {
+        span.classList.add("pf-badge--info"); 
+      }
+
+      // Se o status for o marcador genérico "atrasado" mas for um ticket com status real,
+      // podemos opcionalmente concatenar ou manter apenas o status real com a cor vermelha.
+      span.textContent = isAtrasado && normalized !== "atrasado" ? `${status} (Atrasado)` : status;
+      return span;
+    }
+
+    function renderTickets(data) {
+      body.innerHTML = "";
+      
+      const filterId = filterIdInput.value.trim().toLowerCase();
+      const filterStatus = filterStatusSelect.value.toLowerCase();
+      const filterTecnico = filterTecnicoInput.value.trim().toLowerCase();
+
+      const filteredData = data.filter(ticket => {
+        const tId = String(ticket.ticketId || "").toLowerCase();
+        const tStatus = String(ticket.status || "").toLowerCase();
+        const tTecnico = String(ticket.nomeTecnico || "").toLowerCase();
+
+        const matchId = !filterId || tId.includes(filterId);
+        
+        // Se não houver filtro de status (ou for vazio/"todos"), matchStatus é true
+        const matchStatus = !filterStatus || 
+                           (filterStatus === "atrasado" ? (ticket.isAtrasado || tStatus === "atrasado") : tStatus === filterStatus);
+                           
+        const matchTecnico = !filterTecnico || tTecnico.includes(filterTecnico);
+
+        return matchId && matchStatus && matchTecnico;
+      });
+
+      if (!filteredData || filteredData.length === 0) {
+        body.innerHTML =
+          '<tr><td colspan="7" class="pf-table-empty">Nenhum chamado corresponde aos filtros.</td></tr>';
+        countLabel.textContent = "0 registros";
+        return;
+      }
+
+      filteredData.forEach((ticket) => {
+        const tr = document.createElement("tr");
+
+        const tdId = document.createElement("td");
+        tdId.className = "pf-table-center";
+        tdId.textContent = ticket.ticketId ?? "-";
+
+        const tdTitulo = document.createElement("td");
+        tdTitulo.textContent = ticket.titulo ?? "-";
+
+        const tdDescricao = document.createElement("td");
+        tdDescricao.textContent = ticket.descricao ?? "-";
+
+        const tdSla = document.createElement("td");
+        tdSla.className = "pf-table-center";
+        tdSla.appendChild(createStatusBadge(ticket.statusSla ?? ""));
+
+        const tdTempo = document.createElement("td");
+        tdTempo.className = "pf-table-center";
+        const tempoSpan = document.createElement("span");
+        tempoSpan.classList.add("pf-sla-time");
+        tempoSpan.textContent = ticket.tempoSla ?? "";
+        tdTempo.appendChild(tempoSpan);
+
+        const tdStatus = document.createElement("td");
+        tdStatus.className = "pf-table-center";
+        tdStatus.appendChild(createStatusBadge(ticket.status ?? "", ticket.isAtrasado));
+
+        const tdTecnico = document.createElement("td");
+        tdTecnico.className = "pf-table-center";
+        tdTecnico.textContent = ticket.nomeTecnico || "—";
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdTitulo);
+        tr.appendChild(tdDescricao);
+        tr.appendChild(tdSla);
+        tr.appendChild(tdTempo);
+        tr.appendChild(tdStatus);
+        tr.appendChild(tdTecnico);
+
+        body.appendChild(tr);
+      });
+
+      // Cálculo do Total Bruto (soma de todas as categorias, como no GLPI)
+      let totalBruto = 0;
+      if (filterStatus === "" || filterStatus === "todos") {
+        totalBruto = filteredData.length;
+        const atrasadosCount = filteredData.filter(t => t.isAtrasado).length;
+        totalBruto += atrasadosCount;
+      } else {
+        totalBruto = filteredData.length;
+      }
+
+      countLabel.textContent = `${totalBruto} registro${totalBruto > 1 ? "s" : ""}${totalBruto !== filteredData.length ? ` (${filteredData.length} únicos)` : ""}`;
+    }
+
+    async function loadTickets() {
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+
+      const params = new URLSearchParams();
+      if (start) params.append("startDate", start);
+      if (end) params.append("endDate", end);
+
+      const url = `/api/bi/tickets${params.toString() ? `?${params.toString()}` : ""}`;
+
+      body.innerHTML =
+        '<tr><td colspan="6" class="pf-table-loading">Carregando chamados...</td></tr>';
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error("Erro ao buscar chamados");
+        }
+        allTicketsData = await res.json();
+        renderTickets(allTicketsData);
+      } catch (error) {
+        console.error(error);
+        body.innerHTML =
+          '<tr><td colspan="7" class="pf-table-error">Erro ao carregar os chamados. Verifique se a API está rodando.</td></tr>';
+        countLabel.textContent = "erro";
+      }
+    }
+
+    button.addEventListener("click", loadTickets);
+
+    filterIdInput.addEventListener("input", () => renderTickets(allTicketsData));
+    filterStatusSelect.addEventListener("change", () => renderTickets(allTicketsData));
+    filterTecnicoInput.addEventListener("input", () => renderTickets(allTicketsData));
+
+    clearBtn.addEventListener("click", () => {
+      filterIdInput.value = "";
+      filterStatusSelect.value = "";
+      filterTecnicoInput.value = "";
+      if (allTicketsData.length > 0) {
+        renderTickets(allTicketsData);
+      }
+    });
+
+    let filtersVisible = false;
+    toggleFiltersBtn.addEventListener("click", () => {
+      filtersVisible = !filtersVisible;
+      if (filtersVisible) {
+        filtersContainer.style.display = "block";
+        toggleFiltersBtn.textContent = "Ocultar Filtros";
+      } else {
+        filtersContainer.style.display = "none";
+        toggleFiltersBtn.textContent = "Mostrar Filtros";
+      }
+    });
+
+    // Carregamento automático ao abrir a página
+    loadTickets();
+  </script>
+</body>
+
+</html>
