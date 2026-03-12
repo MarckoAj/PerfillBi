@@ -37,7 +37,7 @@
             Retorna chamados do GLPI filtrando por status (ex.: novo,
             atribuido, pausado, solucionado).
           </p>
-          <pre class="pf-code-block"><code>GET http://localhost:&lt;PORT&gt;/api/tickets/atribuido</code></pre>
+          <pre class="pf-code-block"><code>GET https://perfillbi.onrender.com/api/tickets/atribuido</code></pre>
         </div>
 
         <div class="pf-endpoint-card">
@@ -52,7 +52,7 @@
             <li><strong>endDate</strong>: data final (YYYY-MM-DD)</li>
           </ul>
           <pre
-            class="pf-code-block"><code>GET http://localhost:&lt;PORT&gt;/api/bi/tickets?startDate=2026-03-01&amp;endDate=2026-03-11</code></pre>
+            class="pf-code-block"><code>GET https://perfillbi.onrender.com/api/bi/tickets?startDate=2026-03-01&amp;endDate=2026-03-11</code></pre>
         </div>
       </div>
     </section>
@@ -70,6 +70,9 @@
     "...": "campos adicionais"
   }
 ]</code></pre>
+| Header | Valor |
+| :--- | :--- |
+| **Authorization** | `Bearer <seu_token>` |
     </section>
 
     <section class="pf-card">
@@ -82,7 +85,16 @@
         </li>
         <li>
           Informar a URL do endpoint BI, por exemplo:
-          <code>https://SeuServidor/api/bi/tickets?startDate=2026-03-01&amp;endDate=2026-03-11</code>.
+          <code>https://perfillbi.onrender.com/api/bi/tickets?startDate=2026-03-01&amp;endDate=2026-03-11</code>.
+        </li>
+        <li>
+          Configurar o <strong>Cabeçalho HTTP</strong>:
+          <ul>
+            <li>No Power BI, em "Obter Dados > Web", clique em <strong>Avançado</strong>.</li>
+            <li>Adicione um cabeçalho chamado <code>Authorization</code>.</li>
+            <li>O valor deve ser <code>Bearer sua_chave_definida_no_env</code>.</li>
+          </ul>
+        </li>
           <ul>
             <li>
               <strong>startDate</strong> representa a data inicial da consulta.
@@ -103,8 +115,8 @@
         <li>Modelar e criar os relatórios normalmente no Power BI.</li>
       </ol>
       <p class="pf-note">
-        Substitua <code>&lt;PORT&gt;</code> pela porta configurada no seu
-        arquivo <code>.env</code> (por padrão, 3000).
+        O domínio oficial é <code>https://perfillbi.onrender.com</code>. 
+        Certifique-se de configurar o token <code>API_AUTH_TOKEN</code> no Render.
       </p>
     </section>
 
