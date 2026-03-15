@@ -6,7 +6,7 @@ const startJobs = () => {
   cron.schedule("0 */4 * * *", async () => {
     console.log("Iniciando rotina automática de sincronização diária...");
     try {
-      await syncService.syncStatus("fechado");
+      await syncService.syncAll();
       console.log("Rotina de sincronização concluída com sucesso!");
     } catch (error) {
       console.error("Erro na rotina de sincronização automática:", error);

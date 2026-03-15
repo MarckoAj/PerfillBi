@@ -54,6 +54,18 @@ class SyncService {
 
     console.log(`Sincronização de ${statusName} finalizada com sucesso!`);
   }
+
+  async syncAll() {
+    const statuses = ["novo", "atribuido", "planejado", "pendente", "solucionado", "fechado"];
+
+    for (const status of statuses) {
+      await this.syncStatus(status);
+    }
+
+    // Atualiza atrasados: reseta tudo e marca somente os atrasados atuais
+    await ticketRepository.resetAtrasadoFlags();
+    await this.syncStatus("atrasado");
+  }
 }
 
 export default new SyncService();

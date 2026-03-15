@@ -31,7 +31,7 @@ export const getTicketsStats = asyncHandler(async (req, res) => {
 import syncService from "../services/sync_service.js";
 export const syncBiManual = asyncHandler(async (req, res) => {
   // Dispara a sincronização de forma assíncrona (não prende a resposta HTTP)
-  syncService.syncStatus("fechado").then(() => console.log("Sincronização manual finalizada com sucesso."))
+  syncService.syncAll().then(() => console.log("Sincronização manual finalizada com sucesso."))
     .catch((e) => console.error("Erro na sincronização manual:", e));
 
   // Retorna um HTML simples

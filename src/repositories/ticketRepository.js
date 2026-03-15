@@ -53,6 +53,16 @@ class TicketRepository {
     }
   }
 
+  async resetAtrasadoFlags() {
+    const query = "UPDATE tickets SET isAtrasado = 0";
+    try {
+      await pool.query(query);
+    } catch (error) {
+      console.error("Erro ao resetar flags de atrasado:", error);
+      throw error;
+    }
+  }
+
   async getAllTickets(startDate, endDate, statusGroup = 'todos', limit = 100, offset = 0) {
     let query = "SELECT * FROM tickets";
     const params = [];
