@@ -15,7 +15,7 @@ export const getTicketsForBi = asyncHandler(async (req, res) => {
     startDate, 
     endDate, 
     statusGroup || 'todos', 
-    parseInt(limit) || 100, 
+    parseInt(limit) || 50000, 
     parseInt(offset) || 0
   );
   
