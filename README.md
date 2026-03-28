@@ -1,56 +1,37 @@
 # Perfill BI Integration (GLPI)
 
-Esta API funciona como um middleware estratégico entre o sistema **GLPI** (Gestão de chamados) e ferramentas de **Business Intelligence** (como Power BI) ou Dashboards customizados.
-
-Ela extrai e padroniza dados brutos, simplifica as consultas, expõe rotas seguras e de alta performance, e mapeia todas as regras de negócio em um único local, protegendo o banco original e sistemas de consumo.
+Esta API é um middleware seguro entre o **GLPI** e ferramentas de **Business Intelligence** (Power BI) ou Dashboards customizados.
 
 ## 🚀 Tecnologias
+- **Node.js** (Express)
+- **MySQL** (Banco de dados da aplicação)
+- **Jest** (Testes de integração)
 
-- **Node.js** com **Express**
-- **MySQL2** (para banco de staging local)
-- **Jest** e **Supertest** (Testes automatizados e de integração)
-- **CORS**, **Dotenv**, etc.
+## 📦 Estrutura
+- `src/controllers`: Lógica de rotas e respostas HTTP.
+- `src/services`: Regras de negócio e orquestração de dados.
+- `src/repositories`: Acesso direto ao banco de dados.
+- `src/mappers`: Padronização de dados GLPI -> BI.
+- `src/integrations`: Clientes para API externa do GLPI.
 
-## 📦 Arquitetura
+## ⚙️ Configuração (Render / Local)
+Certifique-se de configurar as seguintes variáveis de ambiente:
+- `PORT`: Porta da aplicação (padrão 3000).
+- `GLPI_BASE_URL`: URL da sua instância GLPI.
+- `GLPI_APIKEY`: Token de API do usuário GLPI.
+- `DB_URL`: String de conexão MySQL (ex: mysql://user:pass@host:port/db).
+- `API_AUTH_TOKEN`: Token estático para proteção das rotas de BI.
+- `DASHBOARD_USER` / `DASHBOARD_PASS`: Credenciais para o painel visual.
 
-Este projeto foi reestruturado seguindo princípios sólidos, com separação de responsabilidades nas seguintes camadas:
+## 🛠️ Comandos
+- `npm install`: Instala as dependências.
+- `npm start`: Inicia o servidor em produção.
+- `npm test`: Executa a suíte de testes.
 
-```text
-src/
-├── clients/      # Integrações com sistemas externos (Ex: GLPI Client API)
-├── config/       # Configuração global da aplicação (Express)
-├── controllers/  # Recebe requisições HTTP, chama services, envia respostas HTTP
-├── mappers/      # Padroniza dados recebidos do GLPI para o formato BI ou BD
-├── middlewares/  # Camada de interceptação (autenticação, logs, manipulação de erros)
-├── repositories/ # Transações diretas e focadas com o banco de dados da aplicação
-├── routes/       # Pontos de entrada da API (/api/bi, /api/auth)
-├── service/      # Regras de Negócio, orquestração entre repositories e clients
-└── utils/        # Classes auxiliares, como Construtores de URL (GlpiUrlBuilder)
-```
-
-## 🔐 Autenticação e Segurança
-
-Há uma rota pública para a página inicial, mas os acessos aos endpoints de negócio (ex: Power BI e Dashboard de Chamados) estão protegidos através de **Tokens estáticos**.
-Estes tokens devem ser configurados no arquivo `.env` para proteção. 
-
-## ⚙️ Como executar localmente
-
-1. Faça um `git clone` deste repositório
-2. Rode `npm install` no diretório principal.
-3. Configure o arquivo `.env` baseado no `.env.example` preenchendo:
-   - Suas credenciais da API do GLPI.
-   - Suas credenciais do Banco do projeto (Aiven, local, etc).
-   - O usuário/senha e Token secreto para as rotas do Painel de BI.
-4. Execute `npm run dev` (com nodemon) ou `npm start`.
-
-A aplicação escutará por padrão na porta `3000`.
-
-## 🧪 Testes de Integração
-
-A aplicação conta com um suite completo na pasta `__tests__/`. Usamos o **Jest** configurado com **Supertest** para cobrir as rotas de ponta a ponta ("mockando" as dependências externas de DB e GLPI).
-
-Para rodá-los, utilize o comando:
-
-```bash
-npm test
-```
+## 🚀 Deploy no Render
+1. Crie um novo **Web Service**.
+2. Conecte seu repositório GitHub.
+3. **Runtime**: Node
+4. **Build Command**: `npm install`
+5. **Start Command**: `npm start`
+6. Adicione as variáveis de ambiente em **Environment**.

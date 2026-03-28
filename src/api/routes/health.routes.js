@@ -1,6 +1,6 @@
 import { Router } from "express";
 import pool from "../../database/connection.js";
-import alertRepository from "../../core/alerts/alertRepository.js";
+import alertRepository from "../../repositories/alertRepository.js";
 
 const router = Router();
 

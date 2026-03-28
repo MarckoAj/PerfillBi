@@ -1,4 +1,4 @@
-import ticketStatusMapper from "../src/core/tickets/ticketStatusMapper.js";
+import ticketStatusMapper from "../src/mappers/ticketStatusMapper.js";
 
 describe("ticketStatusMapper", () => {
   it("should map known status names to GLPI ids", () => {
